@@ -3,11 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-	<title>作者分身工具 - 深度定制版</title>
-	<style>
-		/* 样式与之前相同，为节省篇幅略去，但实际包含所有样式 */
-		/* 为保持完整性，我将复用之前的样式，稍后补充 */
-	</style>
+	<title>作者分身工具 - 精简版</title>
 	<style>
 		* {
 			box-sizing: border-box;
@@ -77,7 +73,8 @@
 		.main-content {
 			flex: 1;
 			overflow-y: auto;
-			padding: 20px;
+			padding: 16px;
+			padding-bottom: 80px; /* 为底部发送按钮留空间 */
 		}
 		.page {
 			display: none;
@@ -98,6 +95,7 @@
 			justify-content: space-around;
 			padding: 8px 0 12px;
 			z-index: 10;
+			position: relative;
 		}
 		.nav-item {
 			flex: 1;
@@ -120,17 +118,15 @@
 			font-size: 1.4rem;
 		}
 
-		.card {
-			background: var(--card-bg);
-			border-radius: 20px;
-			padding: 20px;
-			margin-bottom: 20px;
-			box-shadow: var(--shadow);
-			border: 1px solid var(--border-color);
+		/* 区域样式 */
+		.section {
+			background: transparent;
+			margin-bottom: 24px;
 		}
-		.card h3 {
-			margin-bottom: 16px;
+		.section h3 {
+			margin-bottom: 12px;
 			font-size: 1.2rem;
+			font-weight: 600;
 		}
 		.flex-row {
 			display: flex;
@@ -140,7 +136,7 @@
 			margin-bottom: 16px;
 		}
 		input, textarea, select, button {
-			background: var(--bg-color);
+			background: var(--card-bg);
 			border: 1px solid var(--border-color);
 			border-radius: 12px;
 			padding: 10px 14px;
@@ -169,12 +165,13 @@
 			resize: vertical;
 		}
 		.chat-window {
-			background: var(--bg-color);
+			background: var(--card-bg);
 			border-radius: 16px;
 			padding: 12px;
-			height: 350px;
+			height: calc(100vh - 180px);
 			overflow-y: auto;
 			margin-bottom: 12px;
+			border: 1px solid var(--border-color);
 		}
 		.chat-message {
 			margin-bottom: 12px;
@@ -193,24 +190,20 @@
 			border: 1px solid var(--border-color);
 		}
 		.generated-article {
-			background: var(--bg-color);
+			background: var(--card-bg);
 			border-radius: 16px;
 			padding: 16px;
 			white-space: pre-wrap;
 			font-family: inherit;
 			max-height: 400px;
 			overflow-y: auto;
+			border: 1px solid var(--border-color);
 		}
 		.status {
 			font-size: 0.8rem;
 			color: var(--secondary);
 			margin-top: 8px;
 		}
-		hr {
-			margin: 16px 0;
-			border-color: var(--border-color);
-		}
-
 		.progress-bar {
 			width: 100%;
 			height: 4px;
@@ -352,7 +345,7 @@
 			background: var(--card-bg);
 		}
 		.book-preview {
-			background: var(--bg-color);
+			background: var(--card-bg);
 			border-radius: 12px;
 			padding: 8px;
 			margin-top: 8px;
@@ -361,10 +354,11 @@
 			white-space: pre-wrap;
 		}
 		.mode-switch {
-			background: var(--bg-color);
+			background: var(--card-bg);
 			border-radius: 20px;
 			display: inline-flex;
 			padding: 2px;
+			border: 1px solid var(--border-color);
 		}
 		.mode-switch button {
 			background: transparent;
@@ -378,6 +372,30 @@
 			background: var(--primary);
 			color: white;
 		}
+
+		/* 浮动发送按钮 */
+		.floating-send {
+			position: fixed;
+			bottom: 70px;
+			right: 20px;
+			background: var(--primary);
+			color: white;
+			border: none;
+			border-radius: 50%;
+			width: 56px;
+			height: 56px;
+			font-size: 1.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+			z-index: 20;
+			transition: background 0.2s;
+		}
+		.floating-send:hover {
+			background: var(--primary-hover);
+		}
 	</style>
 </head>
 <body>
@@ -388,7 +406,7 @@
 
 <div class="main-content">
 	<div id="pageGenerate" class="page active">
-		<div class="card">
+		<div class="section">
 			<div class="flex-row" style="justify-content: space-between;">
 				<h3>✍️ 生成随笔（第一人称）</h3>
 				<div class="mode-switch" id="modeSwitch">
@@ -402,8 +420,7 @@
 			</div>
 			<div id="bookPanel" style="display: none;">
 				<div class="flex-row">
-					<input type="file" id="bookFile" accept=".txt,.md" style="flex:1">
-					<button id="loadBookBtn" class="secondary">📚 导入书籍</button>
+					<input type="file" id="bookFile" accept=".txt,.md">
 					<button id="extractNotesBtn" class="secondary" style="display:none">📝 提取笔记</button>
 					<button id="clearBookBtn" class="secondary" style="display:none">清除书籍</button>
 				</div>
@@ -427,14 +444,13 @@
 	</div>
 
 	<div id="pageLearn" class="page">
-		<div class="card">
+		<div class="section">
 			<h3>📄 学习作者文章</h3>
 			<div class="flex-row">
 				<input type="file" id="fileUpload" accept=".txt,.md" multiple>
-				<button id="uploadFilesBtn">上传文件学习</button>
+				<button id="pasteBtn" class="secondary">📋 粘贴学习</button>
 			</div>
-			<div style="margin: 16px 0;">
-				<label>或粘贴文章正文：</label>
+			<div id="pasteArea" style="display: none;">
 				<textarea id="pasteText" rows="6" placeholder="将文章正文粘贴到这里..."></textarea>
 				<div class="flex-row" style="margin-top: 8px;">
 					<button id="learnPasteBtn">学习粘贴的正文</button>
@@ -445,13 +461,11 @@
 	</div>
 
 	<div id="pageChat" class="page">
-		<div class="card">
+		<div class="section">
 			<h3>💬 与AI作者对话（深度构建）</h3>
 			<div class="chat-window" id="chatWindow"></div>
-			<div class="flex-row" style="margin-bottom:0;">
-				<input type="text" id="chatInput" placeholder="输入回答或指令（如“总结一下我”）">
-				<button id="sendChatBtn">发送</button>
-				<button id="undoChatBtn" class="secondary">↩️ 撤销</button>
+			<div style="position: relative;">
+				<input type="text" id="chatInput" placeholder="输入回答或指令（如“总结一下我”）" style="width: 100%;">
 			</div>
 		</div>
 	</div>
@@ -462,6 +476,9 @@
 	<div class="nav-item" data-page="learn"><div class="nav-icon">📚</div><div>学习文章</div></div>
 	<div class="nav-item" data-page="chat"><div class="nav-icon">💬</div><div>对话</div></div>
 </div>
+
+<!-- 浮动发送按钮 -->
+<button id="floatingSendBtn" class="floating-send">➤</button>
 
 <!-- 设置模态框 -->
 <div id="settingsModal" class="modal">
@@ -511,13 +528,13 @@
 	let authors = {};
 	let currentChatHistory = [];
 	let undoStack = [];
-	let currentBookContent = null;      // 原始书籍内容
-	let currentBookNotes = null;        // 提取的笔记
+	let currentBookContent = null;
+	let currentBookNotes = null;
 	let currentBookName = "";
-	let bookMode = false;               // 书籍创作模式
-	let lastBookArticleContext = "";    // 用于连续生成时传递上下文
+	let bookMode = false;
+	let lastBookArticleContext = "";
 
-	// 辅助函数：加载/保存数据
+	// 加载/保存数据
 	function loadAllData() {
 		const data = localStorage.getItem('author_clone_data');
 		if (data) {
@@ -528,10 +545,7 @@
 					messages: parsed[id].messages || [],
 					historyStack: parsed[id].historyStack || []
 				};
-				// 确保 avg_article_length 字段存在
-				if (!authors[id].profile.avg_article_length) {
-					authors[id].profile.avg_article_length = 600; // 默认
-				}
+				if (!authors[id].profile.avg_article_length) authors[id].profile.avg_article_length = 600;
 			}
 		}
 		const savedCurrent = localStorage.getItem('current_author');
@@ -613,9 +627,7 @@
 	async function addMessagesWithDelay(messages) {
 		for (let i = 0; i < messages.length; i++) {
 			addMessage('assistant', messages[i]);
-			if (i < messages.length - 1) {
-				await new Promise(resolve => setTimeout(resolve, 400));
-			}
+			if (i < messages.length - 1) await new Promise(r => setTimeout(r, 400));
 		}
 	}
 
@@ -691,9 +703,7 @@
 			return;
 		}
 		delete authors[id];
-		if (currentAuthorId === id) {
-			currentAuthorId = Object.keys(authors)[0];
-		}
+		if (currentAuthorId === id) currentAuthorId = Object.keys(authors)[0];
 		saveAllData();
 		loadCurrentAuthor();
 	}
@@ -721,7 +731,7 @@
 		currentAuthorId = newId;
 		saveAllData();
 		loadCurrentAuthor();
-		addMessage('assistant', `你好！我是${name}。我会通过聊天深入了解你——你的写作习惯、价值观、世界观，最终让你能生成真正像你写的文章。我们开始吧。`);
+		addMessage('assistant', `你好！我是${name}。我会通过聊天深入了解你。`);
 		closeModal();
 	}
 
@@ -741,39 +751,22 @@
 		const apiUrl = document.getElementById('apiUrl').value.trim();
 		const modelName = document.getElementById('modelName').value.trim();
 		const apiKey = document.getElementById('apiKey').value.trim();
-		if (!apiUrl || !modelName || !apiKey) {
-			throw new Error('请先在设置中填写完整的API配置');
-		}
-		const messages = [
-			{ role: 'system', content: systemPrompt },
-			{ role: 'user', content: userPrompt }
-		];
-		const body = {
-			model: modelName,
-			messages: messages,
-			temperature: 0.7
-		};
+		if (!apiUrl || !modelName || !apiKey) throw new Error('请先填写完整的API配置');
+		const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }];
+		const body = { model: modelName, messages, temperature: 0.7 };
 		const response = await fetch(apiUrl, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${apiKey}`
-			},
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
 			body: JSON.stringify(body)
 		});
 		if (!response.ok) {
 			let errorMsg = `API请求失败: ${response.status}`;
-			try {
-				const errorData = await response.json();
-				errorMsg += ` ${JSON.stringify(errorData)}`;
-			} catch (e) {}
+			try { const errorData = await response.json(); errorMsg += ` ${JSON.stringify(errorData)}`; } catch (e) {}
 			throw new Error(errorMsg);
 		}
 		const data = await response.json();
-		if (data.choices && data.choices[0] && data.choices[0].message) {
-			return data.choices[0].message.content;
-		}
-		throw new Error('返回格式异常，请检查API地址和模型是否匹配');
+		if (data.choices && data.choices[0] && data.choices[0].message) return data.choices[0].message.content;
+		throw new Error('返回格式异常');
 	}
 
 	async function testApiConnection() {
@@ -784,7 +777,7 @@
 		resultDiv.className = 'test-result';
 		try {
 			await callCustomModel('你是一个助手', '回复“OK”');
-			resultDiv.innerHTML = '✅ 连接成功！API配置正确。';
+			resultDiv.innerHTML = '✅ 连接成功！';
 			resultDiv.className = 'test-result test-success';
 		} catch (err) {
 			resultDiv.innerHTML = `❌ 测试失败：${err.message}`;
@@ -801,25 +794,19 @@
 			const missing = dimensions.filter(d => !profile[d] || Object.keys(profile[d]).length === 0);
 			let prompt;
 			if (missing.length > 0) {
-				prompt = `你是一个专业的作者分身构建助手。当前用户（作者）的画像中，以下维度信息不足：${missing.join(', ')}。
-请根据已有的信息（如果有），向用户提出一个具体、有深度的问题，目的是深入了解他/她的${missing[0]}方面。
-**要求**：一次只问一个问题，用简短的语言。如果你觉得有必要分成多个短消息发送，请用 <split> 分隔每条消息，每条消息独立。问题要自然，像朋友聊天，但必须聚焦于帮助完善画像。只输出消息内容（可含<split>分隔符）。`;
+				prompt = `你是一个专业的作者分身构建助手。当前用户画像中，以下维度信息不足：${missing.join(', ')}。请根据已有信息，向用户提出一个具体、有深度的问题，目的是深入了解他/她的${missing[0]}方面。一次只问一个问题，用简短的语言。如果你觉得有必要分成多个短消息发送，请用 <split> 分隔。只输出消息内容。`;
 			} else {
-				prompt = `你是一个专业的作者分身构建助手。当前用户画像如下（JSON）：
-${JSON.stringify(profile, null, 2)}
-请分析这些信息，找出一个最需要深挖的点（例如某个价值观的成因、写作习惯的细节、情感倾向的触发场景等），然后直接提出一个具体、有深度的问题，引导用户进一步分享。
-**要求**：一次只问一个问题，用简短的语言。如果你觉得有必要分成多个短消息发送，请用 <split> 分隔每条消息，每条消息独立。问题要自然，像朋友聊天。只输出消息内容（可含<split>分隔符）。`;
+				prompt = `你是一个专业的作者分身构建助手。当前用户画像如下（JSON）：${JSON.stringify(profile, null, 2)}。请找出一个最需要深挖的点，提出一个具体、有深度的问题，引导用户进一步分享。一次只问一个问题，用简短的语言。如果需要分多条，用 <split> 分隔。只输出消息内容。`;
 			}
 			const result = await callCustomModel("你是一个善于引导对话、深入了解用户的助手。", prompt);
 			const messages = result.split('<split>').map(s => s.trim()).filter(s => s);
 			if (messages.length === 0) messages.push(result);
 			await addMessagesWithDelay(messages);
 		} catch (err) {
-			addMessage('assistant', `我暂时无法提问，可能是网络问题。你可以先上传文章或直接分享你的想法。`);
+			addMessage('assistant', `提问失败：${err.message}`);
 		}
 	}
 
-	// 学习文章（更新平均字数）
 	async function learnFromText(content, sourceName) {
 		try {
 			const profile = authors[currentAuthorId].profile;
@@ -829,41 +816,28 @@ ${JSON.stringify(profile, null, 2)}
 			if (jsonMatch) {
 				const newData = JSON.parse(jsonMatch[0]);
 				for (let key in newData) {
-					if (typeof newData[key] === 'object' && profile[key]) {
-						Object.assign(profile[key], newData[key]);
-					} else {
-						profile[key] = newData[key];
-					}
+					if (typeof newData[key] === 'object' && profile[key]) Object.assign(profile[key], newData[key]);
+					else profile[key] = newData[key];
 				}
 			} else {
 				profile.raw_analysis = result;
 			}
-			// 更新平均文章长度
-			const currentAvg = profile.avg_article_length || 600;
-			const articleLength = content.length;
-			// 简单加权平均：保留历史总长度和篇数
-			if (!profile.total_article_length) {
-				profile.total_article_length = 0;
-				profile.article_count = 0;
-			}
-			profile.total_article_length += articleLength;
+			if (!profile.total_article_length) { profile.total_article_length = 0; profile.article_count = 0; }
+			profile.total_article_length += content.length;
 			profile.article_count += 1;
 			profile.avg_article_length = Math.round(profile.total_article_length / profile.article_count);
 			saveCurrentAuthor();
-			document.getElementById('learnStatus').innerHTML = `✅ 已学习：${sourceName} (平均字数更新为 ${profile.avg_article_length})`;
+			document.getElementById('learnStatus').innerHTML = `✅ 已学习：${sourceName} (平均字数 ${profile.avg_article_length})`;
 		} catch (err) {
 			document.getElementById('learnStatus').innerHTML = `❌ 学习失败：${err.message}`;
 			throw err;
 		}
 	}
 
-	// 分段提取书籍笔记（支持大文件）
 	async function extractBookNotesSegmented(bookContent, bookName) {
-		const MAX_CHUNK = 30000; // 每段最大字符数（约15000字）
+		const MAX_CHUNK = 30000;
 		const chunks = [];
-		for (let i = 0; i < bookContent.length; i += MAX_CHUNK) {
-			chunks.push(bookContent.slice(i, i + MAX_CHUNK));
-		}
+		for (let i = 0; i < bookContent.length; i += MAX_CHUNK) chunks.push(bookContent.slice(i, i + MAX_CHUNK));
 		let allNotes = "";
 		for (let idx = 0; idx < chunks.length; idx++) {
 			const chunk = chunks[idx];
@@ -875,7 +849,6 @@ ${JSON.stringify(profile, null, 2)}
 		return allNotes;
 	}
 
-	// 提取书籍笔记入口
 	async function extractBookNotesWrapper() {
 		if (!currentBookContent) return;
 		const preview = document.getElementById('bookPreview');
@@ -902,261 +875,164 @@ ${JSON.stringify(profile, null, 2)}
 		try {
 			let notes = null;
 			let useBook = false;
-
 			if (bookMode && currentBookContent) {
 				useBook = true;
-				if (!currentBookNotes && currentBookContent.length < 5000) {
-					notes = currentBookContent;
-				} else if (currentBookNotes) {
-					notes = currentBookNotes;
-				} else {
-					document.getElementById('genStatus').innerHTML = '书籍内容较长，请先点击“提取笔记”按钮后再生成文章。';
+				if (!currentBookNotes && currentBookContent.length < 5000) notes = currentBookContent;
+				else if (currentBookNotes) notes = currentBookNotes;
+				else {
+					document.getElementById('genStatus').innerHTML = '书籍内容较长，请先点击“提取笔记”按钮。';
 					progressBar.style.display = 'none';
 					return;
 				}
 			}
 
-			// 获取目标字数（作者平均文章长度）
 			const targetWords = authors[currentAuthorId].profile.avg_article_length || 600;
-
-			// 生成文章
 			document.getElementById('genStatus').innerHTML = '正在生成文章...';
 			progressFill.style.width = '60%';
 
 			const profile = authors[currentAuthorId].profile;
-			let systemPrompt = `你正在扮演一位作者，以下是关于他/她的完整人设：
-${JSON.stringify(profile, null, 2)}
-请完全以这位作者的身份，用第一人称写一篇随笔。文章要自然、真实，像作者随手写下的思考，严格遵循上述所有设定。你的文章长度应该接近 ${targetWords} 字（这是作者平时文章的平均长度）。`;
-
+			let systemPrompt = `你正在扮演一位作者，以下是关于他/她的完整人设：${JSON.stringify(profile, null, 2)}。请完全以这位作者的身份，用第一人称写一篇随笔。文章要自然、真实，像作者随手写下的思考，严格遵循上述所有设定。你的文章长度应该接近 ${targetWords} 字。`;
 			let userPrompt = "";
 			if (useBook && notes) {
-				systemPrompt += `\n\n你最近读了一本书《${currentBookName}》，以下是你对这本书的笔记（或原文节选）：\n${notes.slice(0, 6000)}\n\n请以作者的身份，结合这本书的感悟，写一篇随笔。你可以将书中的观点与自己的经历结合，展开评论或联想，让文章既有书的影子，又充满你的个人风格。不要大段引用原文，而是用自己的话表达。`;
-				if (isContinue && lastBookArticleContext) {
-					systemPrompt += `\n\n你之前已经就这本书写过一篇随笔（摘要如下），现在请写一篇新的、不同角度的随笔，避免重复。\n之前文章摘要：${lastBookArticleContext}`;
-				}
+				systemPrompt += `\n\n你最近读了一本书《${currentBookName}》，以下是你对这本书的笔记（或原文节选）：\n${notes.slice(0, 6000)}\n\n请以作者的身份，结合这本书的感悟，写一篇随笔。不要大段引用原文，用自己的话表达。`;
+				if (isContinue && lastBookArticleContext) systemPrompt += `\n\n你之前已经就这本书写过一篇随笔（摘要如下），现在请写一篇新的、不同角度的随笔，避免重复。\n之前文章摘要：${lastBookArticleContext}`;
 				userPrompt = `灵感（可选）：${inspiration || "无特别灵感，就写写这本书带来的感受吧。"}\n请写出随笔。`;
 			} else {
-				// 普通模式：必须有灵感
-				if (!inspiration) {
-					throw new Error('普通模式下请输入灵感');
-				}
+				if (!inspiration) throw new Error('普通模式下请输入灵感');
 				userPrompt = `灵感：${inspiration}\n请写出随笔。`;
 			}
 
 			const result = await callCustomModel(systemPrompt, userPrompt);
-
 			progressFill.style.width = '100%';
 			setTimeout(() => { progressBar.style.display = 'none'; }, 500);
 
 			const wordCount = result.length;
-			const deviation = Math.abs(wordCount - targetWords);
-			if (deviation > targetWords * 0.3) {
-				document.getElementById('genStatus').innerHTML = `⚠️ 生成文章 ${wordCount} 字，与目标 ${targetWords} 字偏差较大，建议调整。`;
-			} else {
-				document.getElementById('genStatus').innerHTML = `✅ 生成完成 (${wordCount}字)`;
-			}
+			document.getElementById('genStatus').innerHTML = `✅ 生成完成 (${wordCount}字)${Math.abs(wordCount-targetWords)>targetWords*0.3 ? ' ⚠️ 与目标偏差较大' : ''}`;
 			document.getElementById('generatedArticle').innerText = result;
 			currentGeneratedText = result;
 			document.getElementById('copyArticleBtn').style.display = 'inline-block';
 			document.getElementById('modifyArticleBtn').style.display = 'inline-block';
-
-			if (useBook) {
-				lastBookArticleContext = result.slice(0, 500);
-			}
+			if (useBook) lastBookArticleContext = result.slice(0, 500);
 		} catch (err) {
 			progressBar.style.display = 'none';
 			document.getElementById('genStatus').innerHTML = `❌ 生成失败：${err.message}`;
 		}
 	}
 
-	function copyArticle() {
-		if (currentGeneratedText) {
-			navigator.clipboard.writeText(currentGeneratedText);
-			alert('文章已复制到剪贴板');
-		}
-	}
-
+	function copyArticle() { if (currentGeneratedText) { navigator.clipboard.writeText(currentGeneratedText); alert('已复制'); } }
 	async function modifyArticle() {
 		if (!currentGeneratedText) return;
-		const instruction = prompt('请输入修改要求（例如：让语气更轻松，增加一个例子，缩短一些）：');
+		const instruction = prompt('请输入修改要求：');
 		if (!instruction) return;
 		const progressBar = document.getElementById('progressBar');
 		const progressFill = document.getElementById('progressFill');
 		progressBar.style.display = 'block';
 		progressFill.style.width = '0%';
 		document.getElementById('genStatus').innerHTML = '修改中...';
-
 		try {
 			let progress = 0;
-			const interval = setInterval(() => {
-				progress = Math.min(progress + 10, 90);
-				progressFill.style.width = progress + '%';
-			}, 300);
-
+			const interval = setInterval(() => { progress = Math.min(progress+10,90); progressFill.style.width = progress+'%'; }, 300);
 			const profile = authors[currentAuthorId].profile;
-			const systemPrompt = `你正在扮演一位作者，以下是关于他/她的完整人设：
-${JSON.stringify(profile, null, 2)}
-请根据用户的修改要求，对下面这篇文章进行修改，保持第一人称和作者风格。修改要求：${instruction}`;
+			const systemPrompt = `你正在扮演一位作者，人设：${JSON.stringify(profile)}。请根据用户要求修改文章，保持第一人称和作者风格。修改要求：${instruction}`;
 			const result = await callCustomModel(systemPrompt, `原文：\n${currentGeneratedText}\n\n修改后的文章：`);
-
-			clearInterval(interval);
-			progressFill.style.width = '100%';
-			setTimeout(() => { progressBar.style.display = 'none'; }, 500);
-
+			clearInterval(interval); progressFill.style.width = '100%'; setTimeout(()=>progressBar.style.display='none',500);
 			document.getElementById('generatedArticle').innerText = result;
 			currentGeneratedText = result;
 			document.getElementById('genStatus').innerHTML = `✅ 修改完成 (${result.length}字)`;
-
-			// 从修改要求中学习写作偏好
-			const learnPrompt = `用户对文章提出了修改要求：“${instruction}”。请分析这个要求反映了作者什么样的写作偏好或习惯（例如：喜欢简洁、喜欢具体例子、喜欢某种语气等）。以JSON格式返回要合并到作者画像中的新信息，只返回JSON。如果没有新信息，返回{}。`;
+			const learnPrompt = `用户修改要求：“${instruction}”。请分析反映了作者什么写作偏好，返回JSON更新画像，无则{}。`;
 			try {
 				const learnResult = await callCustomModel("", learnPrompt);
 				let jsonMatch = learnResult.match(/\{[\s\S]*\}/);
 				if (jsonMatch) {
 					const updates = JSON.parse(jsonMatch[0]);
-					if (Object.keys(updates).length > 0) {
+					if (Object.keys(updates).length) {
 						const profileObj = authors[currentAuthorId].profile;
 						for (let key in updates) {
-							if (typeof updates[key] === 'object' && profileObj[key]) {
-								Object.assign(profileObj[key], updates[key]);
-							} else {
-								profileObj[key] = updates[key];
-							}
+							if (typeof updates[key] === 'object' && profileObj[key]) Object.assign(profileObj[key], updates[key]);
+							else profileObj[key] = updates[key];
 						}
 						saveCurrentAuthor();
 					}
 				}
-			} catch (e) { console.warn("学习修改偏好失败", e); }
-		} catch (err) {
-			progressBar.style.display = 'none';
-			document.getElementById('genStatus').innerHTML = `❌ 修改失败：${err.message}`;
-		}
+			} catch(e) { console.warn(e); }
+		} catch(err) { progressBar.style.display='none'; document.getElementById('genStatus').innerHTML=`❌ 修改失败：${err.message}`; }
 	}
 
 	async function handleUserMessage(text) {
 		addMessage('user', text);
-
 		if (text.includes('总结') || text.includes('了解我')) {
 			const profile = authors[currentAuthorId].profile;
 			const summaryPrompt = `根据以下作者画像，用自然语言总结当前对作者的理解，包括思想、价值观、写作习惯等。不要提问，只输出总结。\n${JSON.stringify(profile)}`;
 			try {
 				const summary = await callCustomModel("", summaryPrompt);
 				addMessage('assistant', summary);
-			} catch (err) {
-				addMessage('assistant', '生成总结失败，请重试。');
-			}
+			} catch(err) { addMessage('assistant', '总结失败'); }
 			return;
 		}
-
 		const typingDiv = document.createElement('div');
 		typingDiv.className = 'chat-message assistant-message typing-indicator';
 		typingDiv.textContent = '对方正在输入...';
 		document.getElementById('chatWindow').appendChild(typingDiv);
 		const chatWindow = document.getElementById('chatWindow');
 		chatWindow.scrollTop = chatWindow.scrollHeight;
-
 		const profile = authors[currentAuthorId].profile;
 		const conversationContext = currentChatHistory.slice(-5).map(m => `${m.role === 'user' ? '用户' : 'AI'}：${m.content}`).join('\n');
-		const prompt = `你是一个专业的作者分身构建助手。你的目标是深入了解用户，完善他的作者画像（写作风格、价值观、世界观、情感倾向等）。当前用户画像（部分）：
-${JSON.stringify(profile, null, 2)}
-
-对话历史（最近5条）：
-${conversationContext}
-
-用户最新说：“${text}”
-
-请完成两件事：
-1. 以自然、友好的方式回复用户。**回复要求**：根据内容需要，你可以一次发一条较长的消息，也可以分成多条短消息发送。如果需要分多条，请用 <split> 分隔每条消息。每条消息尽量简洁自然，但不必刻意缩短。
-2. 分析用户这句话中是否包含新的、有价值的信息（价值观、写作习惯、世界观、个人经历等）。如果有，请用JSON格式提供要更新的画像字段（只包含新发现的，不要覆盖已有信息）。如果没有，返回空对象{}。
-
-最终输出格式：先输出你的回复（纯文本，可含<split>分隔符），然后输出一个空行，然后输出JSON对象。例如：
-我觉得你说的很有道理。
-<split>
-那你有没有遇到过类似的情况？
-
-{"new_field": "value"} 或 {}`;
-
+		const prompt = `你是一个专业的作者分身构建助手。当前用户画像：${JSON.stringify(profile,null,2)}\n对话历史：${conversationContext}\n用户最新说：“${text}”\n请完成两件事：1. 以自然方式回复用户，可一次发多条用<split>分隔。2. 分析是否有新信息，返回JSON更新画像（无则{}）。输出格式：回复文本\n空行\nJSON`;
 		try {
 			const fullResponse = await callCustomModel("你是一个善于引导、深入挖掘用户内心世界的助手。", prompt);
 			const typingElement = document.querySelector('.typing-indicator');
 			if (typingElement) typingElement.remove();
-
 			const lines = fullResponse.split('\n');
-			let replyText = '';
-			let jsonPart = '';
+			let replyText = '', jsonPart = '';
 			let foundJson = false;
 			for (let line of lines) {
-				if (!foundJson && line.trim().startsWith('{')) {
-					foundJson = true;
-					jsonPart += line;
-				} else if (foundJson) {
-					jsonPart += line;
-				} else {
-					replyText += (replyText ? '\n' : '') + line;
-				}
+				if (!foundJson && line.trim().startsWith('{')) { foundJson = true; jsonPart += line; }
+				else if (foundJson) jsonPart += line;
+				else replyText += (replyText ? '\n' : '') + line;
 			}
 			if (!foundJson) {
 				const match = fullResponse.match(/\{[\s\S]*\}$/);
-				if (match) {
-					jsonPart = match[0];
-					replyText = fullResponse.slice(0, match.index).trim();
-				} else {
-					replyText = fullResponse;
-				}
+				if (match) { jsonPart = match[0]; replyText = fullResponse.slice(0,match.index).trim(); }
+				else replyText = fullResponse;
 			}
-			const messages = replyText.split('<split>').map(s => s.trim()).filter(s => s);
-			if (messages.length === 0) messages.push("嗯，我记下了。");
+			const messages = replyText.split('<split>').map(s=>s.trim()).filter(s=>s);
+			if (messages.length===0) messages.push("嗯，我记下了。");
 			await addMessagesWithDelay(messages);
-
 			if (jsonPart) {
 				try {
 					const updates = JSON.parse(jsonPart);
-					if (Object.keys(updates).length > 0) {
+					if (Object.keys(updates).length) {
 						const profileObj = authors[currentAuthorId].profile;
 						for (let key in updates) {
-							if (typeof updates[key] === 'object' && profileObj[key]) {
-								Object.assign(profileObj[key], updates[key]);
-							} else {
-								profileObj[key] = updates[key];
-							}
+							if (typeof updates[key] === 'object' && profileObj[key]) Object.assign(profileObj[key], updates[key]);
+							else profileObj[key] = updates[key];
 						}
 						saveCurrentAuthor();
 					}
-				} catch (e) { console.warn("解析画像更新失败", e); }
+				} catch(e) { console.warn("解析失败",e); }
 			}
-		} catch (err) {
+		} catch(err) {
 			const typingElement = document.querySelector('.typing-indicator');
 			if (typingElement) typingElement.remove();
-			console.error(err);
 			addMessage('assistant', "我还在学习，你可以再说详细点吗？");
 		}
 	}
 
-	async function handleFiles(files) {
-		for (let file of files) {
-			try {
-				const text = await file.text();
-				await learnFromText(text, file.name);
-			} catch (err) {
-				console.error(err);
-			}
-		}
-	}
+	async function handleFiles(files) { for (let file of files) { try { const text = await file.text(); await learnFromText(text, file.name); } catch(e) { console.error(e); } } }
 
 	function switchPage(pageId) {
-		document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+		document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 		document.getElementById(`page${pageId.charAt(0).toUpperCase() + pageId.slice(1)}`).classList.add('active');
 		document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 		document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
+		// 当切换到对话页面时，聚焦输入框
+		if (pageId === 'chat') {
+			document.getElementById('chatInput').focus();
+		}
 	}
 
-	function openModal() {
-		document.getElementById('settingsModal').classList.add('active');
-		renderAuthorListModal();
-	}
-	function closeModal() {
-		document.getElementById('settingsModal').classList.remove('active');
-	}
+	function openModal() { document.getElementById('settingsModal').classList.add('active'); renderAuthorListModal(); }
+	function closeModal() { document.getElementById('settingsModal').classList.remove('active'); }
 
 	function initDarkMode() {
 		const isDark = localStorage.getItem('darkMode') === 'true';
@@ -1168,24 +1044,17 @@ ${conversationContext}
 	}
 
 	function loadApiConfig() {
-		const savedApiUrl = localStorage.getItem('api_url');
-		const savedModel = localStorage.getItem('model_name');
-		const savedKey = localStorage.getItem('api_key');
-		if (savedApiUrl) document.getElementById('apiUrl').value = savedApiUrl;
-		if (savedModel) document.getElementById('modelName').value = savedModel;
-		if (savedKey) document.getElementById('apiKey').value = savedKey;
+		document.getElementById('apiUrl').value = localStorage.getItem('api_url') || '';
+		document.getElementById('modelName').value = localStorage.getItem('model_name') || '';
+		document.getElementById('apiKey').value = localStorage.getItem('api_key') || '';
 	}
 	function saveApiConfig() {
-		const apiUrl = document.getElementById('apiUrl').value.trim();
-		const modelName = document.getElementById('modelName').value.trim();
-		const apiKey = document.getElementById('apiKey').value.trim();
-		localStorage.setItem('api_url', apiUrl);
-		localStorage.setItem('model_name', modelName);
-		localStorage.setItem('api_key', apiKey);
+		localStorage.setItem('api_url', document.getElementById('apiUrl').value.trim());
+		localStorage.setItem('model_name', document.getElementById('modelName').value.trim());
+		localStorage.setItem('api_key', document.getElementById('apiKey').value.trim());
 		alert('API配置已保存');
 	}
 
-	// 书籍相关
 	function loadBookFromFile(file) {
 		const reader = new FileReader();
 		reader.onload = async (e) => {
@@ -1195,21 +1064,18 @@ ${conversationContext}
 			const preview = document.getElementById('bookPreview');
 			preview.style.display = 'block';
 			preview.innerHTML = `📖 已加载书籍《${currentBookName}》，共 ${currentBookContent.length} 字符。`;
-			document.getElementById('clearBookBtn').style.display = 'inline-block';
 			document.getElementById('extractNotesBtn').style.display = 'inline-block';
+			document.getElementById('clearBookBtn').style.display = 'inline-block';
 			document.getElementById('continueBookBtn').style.display = 'inline-block';
 		};
 		reader.readAsText(file, 'UTF-8');
 	}
 
 	function clearBook() {
-		currentBookContent = null;
-		currentBookNotes = null;
-		currentBookName = "";
-		lastBookArticleContext = "";
+		currentBookContent = null; currentBookNotes = null; currentBookName = ""; lastBookArticleContext = "";
 		document.getElementById('bookPreview').style.display = 'none';
-		document.getElementById('clearBookBtn').style.display = 'none';
 		document.getElementById('extractNotesBtn').style.display = 'none';
+		document.getElementById('clearBookBtn').style.display = 'none';
 		document.getElementById('continueBookBtn').style.display = 'none';
 		document.getElementById('bookFile').value = '';
 	}
@@ -1228,6 +1094,22 @@ ${conversationContext}
 		}
 	}
 
+	// 浮动发送按钮逻辑
+	function handleFloatingSend() {
+		const activePage = document.querySelector('.page.active').id;
+		if (activePage === 'pageChat') {
+			const input = document.getElementById('chatInput');
+			const text = input.value.trim();
+			if (text) {
+				handleUserMessage(text);
+				input.value = '';
+			}
+		} else {
+			// 切换到对话页面
+			switchPage('chat');
+		}
+	}
+
 	window.onload = () => {
 		loadAllData();
 		initDarkMode();
@@ -1235,16 +1117,12 @@ ${conversationContext}
 
 		document.getElementById('settingsBtn').onclick = openModal;
 		document.getElementById('closeModalBtn').onclick = closeModal;
-		document.getElementById('settingsModal').addEventListener('click', (e) => {
-			if (e.target === document.getElementById('settingsModal')) closeModal();
-		});
-
+		document.getElementById('settingsModal').addEventListener('click', (e) => { if (e.target === document.getElementById('settingsModal')) closeModal(); });
 		document.getElementById('saveApiBtn').onclick = saveApiConfig;
 		document.getElementById('testApiBtn').onclick = testApiConnection;
 
 		document.getElementById('newAuthorModalBtn').onclick = createNewAuthor;
 		document.getElementById('exportAuthorModalBtn').onclick = exportAuthor;
-
 		const importFileInput = document.getElementById('importFileDirect');
 		importFileInput.onchange = (e) => {
 			if (e.target.files[0]) {
@@ -1257,65 +1135,52 @@ ${conversationContext}
 						saveCurrentAuthor();
 						alert('导入成功');
 						renderAuthorListModal();
-					} catch (err) {
-						alert('文件格式错误');
-					}
+					} catch(err) { alert('文件格式错误'); }
 				};
 				reader.readAsText(file);
 			}
 			e.target.value = '';
 		};
 
-		document.getElementById('uploadFilesBtn').onclick = async () => {
-			const files = document.getElementById('fileUpload').files;
-			if (files.length === 0) {
-				alert('请选择文件');
-				return;
+		// 学习文章：直接使用文件选择框
+		const fileUpload = document.getElementById('fileUpload');
+		fileUpload.onchange = async (e) => {
+			if (e.target.files.length) {
+				document.getElementById('learnStatus').innerHTML = '学习中...';
+				await handleFiles(e.target.files);
+				fileUpload.value = '';
 			}
-			document.getElementById('learnStatus').innerHTML = '学习中...';
-			await handleFiles(files);
-			document.getElementById('fileUpload').value = '';
 		};
+		// 粘贴学习
+		const pasteBtn = document.getElementById('pasteBtn');
+		const pasteArea = document.getElementById('pasteArea');
+		pasteBtn.onclick = () => { pasteArea.style.display = pasteArea.style.display === 'none' ? 'block' : 'none'; };
 		document.getElementById('learnPasteBtn').onclick = async () => {
 			const text = document.getElementById('pasteText').value.trim();
-			if (!text) {
-				alert('请粘贴文章正文');
-				return;
-			}
+			if (!text) { alert('请粘贴文章正文'); return; }
 			document.getElementById('learnStatus').innerHTML = '学习中...';
 			await learnFromText(text, '手动粘贴');
 			document.getElementById('pasteText').value = '';
+			pasteArea.style.display = 'none';
 		};
 
-		document.getElementById('sendChatBtn').onclick = async () => {
-			const input = document.getElementById('chatInput');
-			const text = input.value.trim();
-			if (!text) return;
-			input.value = '';
-			await handleUserMessage(text);
-		};
-		document.getElementById('undoChatBtn').onclick = undoLastMessage;
+		// 对话
+		document.getElementById('undoChatBtn')?.remove(); // 删除撤销按钮，用浮动按钮
+		// 浮动发送按钮
+		document.getElementById('floatingSendBtn').onclick = handleFloatingSend;
 
+		// 生成文章
 		document.getElementById('generateBtn').onclick = () => {
 			const insp = document.getElementById('inspirationInput').value.trim();
-			if (!bookMode && !insp) {
-				alert('普通模式下请输入灵感');
-				return;
-			}
+			if (!bookMode && !insp) { alert('普通模式下请输入灵感'); return; }
 			generateArticle(insp, false);
 		};
 		document.getElementById('copyArticleBtn').onclick = copyArticle;
 		document.getElementById('modifyArticleBtn').onclick = modifyArticle;
 
-		// 书籍相关
-		document.getElementById('loadBookBtn').onclick = () => {
-			const fileInput = document.getElementById('bookFile');
-			if (fileInput.files.length === 0) {
-				alert('请先选择书籍文件（.txt 或 .md）');
-				return;
-			}
-			loadBookFromFile(fileInput.files[0]);
-		};
+		// 书籍
+		const bookFile = document.getElementById('bookFile');
+		bookFile.onchange = (e) => { if (e.target.files[0]) loadBookFromFile(e.target.files[0]); };
 		document.getElementById('extractNotesBtn').onclick = extractBookNotesWrapper;
 		document.getElementById('clearBookBtn').onclick = clearBook;
 		document.getElementById('continueBookBtn').onclick = () => {
@@ -1323,7 +1188,6 @@ ${conversationContext}
 			generateArticle(insp, true);
 		};
 
-		// 模式切换
 		document.getElementById('modeNormal').onclick = () => setMode(false);
 		document.getElementById('modeBook').onclick = () => setMode(true);
 
@@ -1332,11 +1196,8 @@ ${conversationContext}
 		});
 
 		setTimeout(() => {
-			if (currentChatHistory.length === 0) {
-				askActiveQuestion();
-			} else {
-				askActiveQuestion();
-			}
+			if (currentChatHistory.length === 0) askActiveQuestion();
+			else askActiveQuestion();
 		}, 500);
 	};
 </script>
